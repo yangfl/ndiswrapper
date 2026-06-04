@@ -60,41 +60,41 @@ SRC_DIR=$(shell pwd)
 include $(KCONFIG)
 
 # returns of structs and unions in registers when possible, like Windows
-EXTRA_CFLAGS += -freg-struct-return
+ccflags-y += -freg-struct-return
 
 # to produce debug trace, add option "DEBUG=<n>" where <n> is 1 to 6
 ifdef DEBUG
-EXTRA_CFLAGS += -DDEBUG=$(DEBUG) -g
+ccflags-y += -DDEBUG=$(DEBUG) -g
 endif
 
 # to debug timers, add option "TIMER_DEBUG=1"
 ifdef TIMER_DEBUG
-EXTRA_CFLAGS += -DTIMER_DEBUG
+ccflags-y += -DTIMER_DEBUG
 endif
 
 # to debug event layer, add option "EVENT_DEBUG=1"
 ifdef EVENT_DEBUG
-EXTRA_CFLAGS += -DEVENT_DEBUG
+ccflags-y += -DEVENT_DEBUG
 endif
 
 # to debug USB layer, add option "USB_DEBUG=1"
 ifdef USB_DEBUG
-EXTRA_CFLAGS += -DUSB_DEBUG
+ccflags-y += -DUSB_DEBUG
 endif
 
 # to debug I/O layer, add option "IO_DEBUG=1"
 ifdef IO_DEBUG
-EXTRA_CFLAGS += -DIO_DEBUG
+ccflags-y += -DIO_DEBUG
 endif
 
 # to debug worker threads, add option "WORK_DEBUG=1"
 ifdef WORK_DEBUG
-EXTRA_CFLAGS += -DWORK_DEBUG
+ccflags-y += -DWORK_DEBUG
 endif
 
 # to debug memory allocation, add option "ALLOC_DEBUG=<n>" where <n> is 1 or 2
 ifdef ALLOC_DEBUG
-EXTRA_CFLAGS += -DALLOC_DEBUG=$(ALLOC_DEBUG)
+ccflags-y += -DALLOC_DEBUG=$(ALLOC_DEBUG)
 endif
 
 OBJS = nvmalloc.o crt.o hal.o iw_ndis.o loader.o ndis.o ntoskernel.o ntoskernel_io.o \
@@ -122,11 +122,11 @@ ifdef ENABLE_USB
 EXPORT_SRCS += usb.c
 STUB_SRCS += usb.c
 OBJS += usb.o
-EXTRA_CFLAGS += -DENABLE_USB
+ccflags-y += -DENABLE_USB
 endif
 
 ifdef WRAP_WQ
-EXTRA_CFLAGS += -DWRAP_WQ
+ccflags-y += -DWRAP_WQ
 OBJS += workqueue.o
 endif
 
