@@ -293,7 +293,11 @@ static void mp_halt(struct ndis_device *wnd)
 		/* ktimer that this wrap_timer is associated to can't
 		 * be touched, as it may have been freed by the driver
 		 * already */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+		if (timer_delete_sync(&wrap_timer->timer))
+#else
 		if (del_timer_sync(&wrap_timer->timer))
+#endif
 			WARNING("Buggy Windows driver left timer %p "
 				"running", wrap_timer->nt_timer);
 		memset(wrap_timer, 0, sizeof(*wrap_timer));
@@ -1119,7 +1123,9 @@ static void iw_stats_timer_proc(struct timer_list *tl)
 static void iw_stats_timer_proc(unsigned long data)
 #endif
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+	struct ndis_device *wnd = timer_container_of(wnd, tl, iw_stats_timer);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
 	struct ndis_device *wnd = from_timer(wnd, tl, iw_stats_timer);
 #else
 	struct ndis_device *wnd = (struct ndis_device *)data;
@@ -1152,7 +1158,11 @@ static void del_iw_stats_timer(struct ndis_device *wnd)
 {
 	ENTER2("%d", wnd->iw_stats_interval);
 	wnd->iw_stats_interval *= -1;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+	timer_delete_sync(&wnd->iw_stats_timer);
+#else
 	del_timer_sync(&wnd->iw_stats_timer);
+#endif
 	EXIT2(return);
 }
 
@@ -1162,7 +1172,9 @@ static void hangcheck_proc(struct timer_list *tl)
 static void hangcheck_proc(unsigned long data)
 #endif
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+	struct ndis_device *wnd = timer_container_of(wnd, tl, hangcheck_timer);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
 	struct ndis_device *wnd = from_timer(wnd, tl, hangcheck_timer);
 #else
 	struct ndis_device *wnd = (struct ndis_device *)data;
@@ -1202,7 +1214,11 @@ void hangcheck_del(struct ndis_device *wnd)
 	ENTER2("%d", wnd->hangcheck_interval);
 	if (wnd->hangcheck_interval > 0)
 		wnd->hangcheck_interval *= -1;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+	timer_delete_sync(&wnd->hangcheck_timer);
+#else
 	del_timer_sync(&wnd->hangcheck_timer);
+#endif
 	EXIT2(return);
 }
 

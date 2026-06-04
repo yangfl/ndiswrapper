@@ -417,7 +417,9 @@ static void timer_proc(struct timer_list *tl)
 static void timer_proc(unsigned long data)
 #endif
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+	struct wrap_timer *wrap_timer = timer_container_of(wrap_timer, tl, timer);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
 	struct wrap_timer *wrap_timer = from_timer(wrap_timer, tl, timer);
 #else
 	struct wrap_timer *wrap_timer = (struct wrap_timer *)data;
@@ -579,7 +581,11 @@ wstdcall BOOLEAN WIN_FUNC(KeCancelTimer,1)
 	/* disable timer before deleting so if it is periodic timer, it
 	 * won't be re-armed after deleting */
 	wrap_timer->repeat = 0;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+	ret = timer_delete_sync(&wrap_timer->timer);
+#else
 	ret = del_timer_sync(&wrap_timer->timer);
+#endif
 	/* the documentation for KeCancelTimer suggests the DPC is
 	 * deqeued, but actually DPC is left to run */
 	if (ret)
@@ -2657,7 +2663,11 @@ void ntoskernel_exit(void)
 		if (!slist)
 			break;
 		wrap_timer = container_of(slist, struct wrap_timer, slist);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+		if (timer_delete_sync(&wrap_timer->timer))
+#else
 		if (del_timer_sync(&wrap_timer->timer))
+#endif
 			WARNING("Buggy Windows driver left timer %p running",
 				wrap_timer->nt_timer);
 		memset(wrap_timer, 0, sizeof(*wrap_timer));
@@ -2708,7 +2718,11 @@ void ntoskernel_exit(void)
 	spin_unlock_bh(&ntoskernel_lock);
 
 #if defined(CONFIG_X86_64)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,16,0)
+	timer_delete_sync(&shared_data_timer);
+#else
 	del_timer_sync(&shared_data_timer);
+#endif
 #endif
 	if (ntos_wq)
 		destroy_workqueue(ntos_wq);
