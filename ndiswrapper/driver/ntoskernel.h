@@ -117,6 +117,12 @@ static cpumask_t cpumasks[NR_CPUS];
 #endif
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,18,0)
+#ifndef in_hardirq
+#define in_hardirq() in_irq()
+#endif
+#endif
+
 #ifndef __packed
 #define __packed __attribute__((packed))
 #endif
@@ -707,7 +713,7 @@ static inline void lower_irql(KIRQL oldirql)
 static inline KIRQL current_irql(void)
 {
 	int count;
-	if (in_irq() || irqs_disabled())
+	if (in_hardirq() || irqs_disabled())
 		EXIT4(return DIRQL);
 	if (in_atomic() || in_interrupt())
 		EXIT4(return SOFT_IRQL);
@@ -723,7 +729,7 @@ static inline KIRQL current_irql(void)
 
 static inline KIRQL current_irql(void)
 {
-	if (in_irq() || irqs_disabled())
+	if (in_hardirq() || irqs_disabled())
 		EXIT4(return DIRQL);
 	if (in_interrupt())
 		EXIT4(return SOFT_IRQL);
