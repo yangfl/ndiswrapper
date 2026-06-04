@@ -744,7 +744,7 @@ typedef struct _IMAGE_BASE_RELOCATION
 {
 	DWORD	VirtualAddress;
 	DWORD	SizeOfBlock;
-	WORD	TypeOffset[0];
+	WORD	TypeOffset[];
 } IMAGE_BASE_RELOCATION,*PIMAGE_BASE_RELOCATION;
 
 typedef struct _IMAGE_RELOCATION

@@ -142,7 +142,7 @@ enum network_type {
 
 struct network_type_list {
 	ULONG num;
-	enum network_type types[1];
+	enum network_type types[];
 };
 
 enum ndis_power {

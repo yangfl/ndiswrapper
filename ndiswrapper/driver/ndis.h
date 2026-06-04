@@ -665,7 +665,7 @@ struct ndis_capability {
 	ULONG version;
 	ULONG num_PMKIDs;
 	ULONG num_auth_encr_pair;
-	struct ndis_auth_encr_pair auth_encr_pair[1];
+	struct ndis_auth_encr_pair auth_encr_pair[];
 };
 
 struct ndis_guid {

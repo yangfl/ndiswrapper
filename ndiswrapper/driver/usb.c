@@ -797,6 +797,9 @@ static void set_intf_pipe_info(struct wrap_device *wd,
 			       struct usbd_interface_information *intf)
 {
 	int i;
+	/* use a pointer to avoid UBSAN bounds checking on
+	 * the flexible array declared as pipes[1] */
+	struct usbd_pipe_information *pipes = intf->pipes;
 	struct usb_endpoint_descriptor *ep;
 	struct usbd_pipe_information *pipe;
 
@@ -808,7 +811,7 @@ static void set_intf_pipe_info(struct wrap_device *wd,
 			      intf, intf->bNumEndpoints, i);
 			break;
 		}
-		pipe = &intf->pipes[i];
+		pipe = &pipes[i];
 
 		if (pipe->flags & USBD_PF_CHANGE_MAX_PACKET)
 			USBTRACE("pkt_sz: %d: %d", pipe->wMaxPacketSize,

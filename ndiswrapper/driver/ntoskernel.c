@@ -35,7 +35,7 @@
 			(sizeof(PFN_NUMBER) * MDL_CACHE_PAGES))
 struct wrap_mdl {
 	struct nt_list list;
-	struct mdl mdl[0];
+	struct mdl mdl[];
 };
 
 /* everything here is for all drivers/devices - not per driver/device */
