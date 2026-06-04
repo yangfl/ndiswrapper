@@ -1013,8 +1013,8 @@ static int grab_object(struct dispatcher_header *dh,
 			   thread, grab);
 		/* either no thread owns the mutex or this thread owns
 		 * it */
-		assert(dh->signal_state == 1 && nt_mutex->owner_thread == NULL);
-		assert(dh->signal_state < 1 && nt_mutex->owner_thread != NULL);
+		assert((dh->signal_state == 1 && nt_mutex->owner_thread == NULL) ||
+		       (dh->signal_state < 1 && nt_mutex->owner_thread != NULL));
 		if ((dh->signal_state == 1 && nt_mutex->owner_thread == NULL) ||
 		    nt_mutex->owner_thread == thread) {
 			if (grab) {
