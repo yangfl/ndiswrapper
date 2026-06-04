@@ -16,7 +16,7 @@
 #ifndef _NVMALLOC_H_
 #define _NVMALLOC_H_
 
+int nvmalloc_init(void);
 void *nvmalloc(unsigned long size, gfp_t gfp_mask, pgprot_t prot);
 
 #endif
-

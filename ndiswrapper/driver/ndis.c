@@ -21,6 +21,7 @@
 #include <linux/kernel_stat.h>
 #include <asm/dma.h>
 #include "ndis_exports.h"
+#include "nvmalloc.h"
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(5,18,0)
 	#define PCI_DMA_TODEVICE DMA_TO_DEVICE
@@ -3041,6 +3042,8 @@ void ndis_exit_device(struct ndis_device *wnd)
 /* ndis_init is called once when module is loaded */
 int ndis_init(void)
 {
+	int ret;
+
 	InitializeListHead(&ndis_work_list);
 	spin_lock_init(&ndis_work_list_lock);
 	INIT_WORK(&ndis_work, ndis_worker);
@@ -3049,6 +3052,12 @@ int ndis_init(void)
 	if (!ndis_wq) {
 		WARNING("couldn't create worker thread");
 		EXIT1(return -ENOMEM);
+	}
+
+	ret = nvmalloc_init();
+	if (ret) {
+		WARNING("couldn't locate __vmalloc_node_range");
+		EXIT1(return ret);
 	}
 
 	TRACE1("ndis_wq: %p", ndis_wq);
