@@ -419,7 +419,11 @@ static int ndis_set_mac_address(struct net_device *dev, void *p)
 			       mac, sizeof(mac));
 		if (res == NDIS_STATUS_SUCCESS) {
 			TRACE1("mac:" MACSTRSEP, MAC2STR(mac));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0)
+			eth_hw_addr_set(dev, mac);
+#else
 			memcpy((void*)dev->dev_addr, mac, sizeof(mac));
+#endif
 		} else
 			ERROR("couldn't get mac address: %08X", res);
 	}
@@ -1879,7 +1883,11 @@ static NDIS_STATUS ndis_start_device(struct ndis_device *wnd)
 		}
 	}
 	TRACE1("mac:" MACSTRSEP, MAC2STR(mac));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,15,0)
+	eth_hw_addr_set(net_dev, mac);
+#else
 	memcpy((void*)net_dev->dev_addr, mac, ETH_ALEN);
+#endif
 
 	strncpy(net_dev->name, if_name, IFNAMSIZ - 1);
 	net_dev->name[IFNAMSIZ - 1] = 0;
