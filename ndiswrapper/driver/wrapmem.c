@@ -181,12 +181,21 @@ void *wrap_vmalloc(unsigned long size, const char *file, int line)
 	return info + 1;
 }
 
-void *wrap__vmalloc(unsigned long size, gfp_t gfp_mask, pgprot_t prot,
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(5,3,0)
+void *wrap__vmalloc(unsigned long size, gfp_t flags, pgprot_t prot,
 		    const char *file, int line)
+#else
+void *wrap__vmalloc(unsigned long size, gfp_t flags,
+		    const char *file, int line)
+#endif
 {
 	struct alloc_info *info;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(5,3,0)
 	info = __vmalloc(size + sizeof(*info), gfp_mask, prot);
+#else
+	info = __vmalloc(size + sizeof(*info), gfp_mask);
+#endif
 	if (!info)
 		return NULL;
 	if (gfp_mask & GFP_ATOMIC)

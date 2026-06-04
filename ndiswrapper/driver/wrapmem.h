@@ -47,8 +47,13 @@ void *wrap_kmalloc(size_t size, gfp_t flags, const char *file, int line);
 void *wrap_kzalloc(size_t size, gfp_t flags, const char *file, int line);
 void wrap_kfree(void *ptr);
 void *wrap_vmalloc(unsigned long size, const char *file, int line);
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(5,3,0)
 void *wrap__vmalloc(unsigned long size, gfp_t flags, pgprot_t prot,
 		    const char *file, int line);
+#else
+void *wrap__vmalloc(unsigned long size, gfp_t flags,
+		    const char *file, int line);
+#endif
 void wrap_vfree(void *ptr);
 void *wrap_alloc_pages(gfp_t flags, unsigned int size,
 		       const char *file, int line);
@@ -75,8 +80,13 @@ void *wrap_ExAllocatePoolWithTag(enum pool_type pool_type, SIZE_T size,
 	wrap_kzalloc(size, flags, __FILE__, __LINE__)
 #define vmalloc(size)				\
 	wrap_vmalloc(size, __FILE__, __LINE__)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(5,3,0)
 #define __vmalloc(size, flags, prot)				\
 	wrap__vmalloc(size, flags, prot, __FILE__, __LINE__)
+#else
+#define __vmalloc(size, flags)				\
+	wrap__vmalloc(size, flags, __FILE__, __LINE__)
+#endif
 #define kfree(ptr) wrap_kfree(ptr)
 #define vfree(ptr) wrap_vfree(ptr)
 
