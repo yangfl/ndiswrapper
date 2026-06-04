@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -496,7 +497,7 @@ static int get_ioctl_device(void)
 	}
 
 	unlink(ioctl_file);
-	if (mknod(ioctl_file, S_IFCHR | 0600, MISC_MAJOR << 8 | minor_dev)) {
+	if (mknod(ioctl_file, S_IFCHR | 0600, makedev(MISC_MAJOR, minor_dev))) {
 		ERROR("couldn't create file %s: %s",
 		      ioctl_file, strerror(errno));
 		return -1;
