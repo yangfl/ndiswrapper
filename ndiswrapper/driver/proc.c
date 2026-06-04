@@ -362,11 +362,11 @@ static int proc_settings_read(struct seq_file *sf, void *v)
 	add_text("hangcheck_interval=%d\n", (hangcheck_interval == 0) ?
 		 (wnd->hangcheck_interval / HZ) : -1);
 
-	list_for_each_entry(setting, &wnd->wd->settings, list) {
+	nt_list_for_each_entry(setting, &wnd->wd->settings, list) {
 		add_text("%s=%s\n", setting->name, setting->value);
 	}
 
-	list_for_each_entry(setting, &wnd->wd->driver->settings, list) {
+	nt_list_for_each_entry(setting, &wnd->wd->driver->settings, list) {
 		add_text("%s=%s\n", setting->name, setting->value);
 	}
 
