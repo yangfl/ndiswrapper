@@ -1270,6 +1270,17 @@ NDIS_STATUS ndis_reinit(struct ndis_device *wnd)
 {
 	NDIS_STATUS status;
 
+	/* USB devices don't support the halt/reinit power-state cycle.
+	 * Attempting to halt a USB device calls the Windows driver's
+	 * MiniportHalt, which tears down USB state (endpoints, interfaces,
+	 * configuration); the subsequent MiniportInitialize then fails
+	 * because the USB device is left in an inconsistent state,
+	 * resulting in a NULL pointer dereference.  USB devices apply
+	 * configuration changes (e.g., MAC address) through NdisWrite-
+	 * Configuration without needing a full halt/reinit cycle. */
+	if (wrap_is_usb_bus(wnd->wd->dev_bus))
+		return NDIS_STATUS_SUCCESS;
+
 	wnd->attributes &= ~NDIS_ATTRIBUTE_NO_HALT_ON_SUSPEND;
 	status = mp_set_power_state(wnd, NdisDeviceStateD3);
 	if (status != NDIS_STATUS_SUCCESS) {
