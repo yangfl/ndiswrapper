@@ -308,6 +308,7 @@ static struct urb *wrap_alloc_urb(struct irp *irp, unsigned int pipe,
 #if defined(CONFIG_HIGHMEM) || defined(CONFIG_HIGHMEM4G)
 			       || PageHighMem(virt_to_page(buf))
 #endif
+			       || object_is_on_stack(buf)
 		    )) {
 		urb->transfer_buffer =
 			usb_alloc_coherent(wd->usb.udev, buf_len, alloc_flags,
@@ -977,34 +978,57 @@ static USBD_STATUS wrap_get_descriptor(struct wrap_device *wd,
 	struct usbd_control_descriptor_request *control_desc;
 	int ret = 0;
 	struct usb_device *udev;
+	void *buf;
+	unsigned int buf_len;
 
 	udev = wd->usb.udev;
 	control_desc = &nt_urb->control_desc;
+	buf = control_desc->transfer_buffer;
+	buf_len = control_desc->transfer_buffer_length;
 	USBTRACE("desctype = %d, descindex = %d, transfer_buffer = %p,"
 		 "transfer_buffer_length = %d", control_desc->desc_type,
-		 control_desc->index, control_desc->transfer_buffer,
-		 control_desc->transfer_buffer_length);
+		 control_desc->index, buf, buf_len);
+
+	/*
+	 * The Windows driver may pass a buffer on the stack (or in other
+	 * non-DMA-safe memory).  usb_get_descriptor() -> usb_control_msg()
+	 * needs a DMA-safe buffer, so use a kmalloc bounce buffer when
+	 * the caller's buffer isn't safe.
+	 */
+	if (buf && buf_len &&
+	    (!virt_addr_valid(buf) || object_is_on_stack(buf))) {
+		buf = kmalloc(buf_len, GFP_KERNEL);
+		if (!buf) {
+			USBTRACE("couldn't allocate dma-safe buffer");
+			return USBD_STATUS_NO_MEMORY;
+		}
+	}
 
 	if (control_desc->desc_type == USB_DT_STRING) {
 		USBTRACE("langid: %x", control_desc->language_id);
 		ret = wrap_usb_get_string(udev, control_desc->language_id,
 					  control_desc->index,
-					  control_desc->transfer_buffer,
-					  control_desc->transfer_buffer_length);
+					  buf, buf_len);
 	} else {
 		ret = usb_get_descriptor(udev, control_desc->desc_type,
 					 control_desc->index,
-					 control_desc->transfer_buffer,
-					 control_desc->transfer_buffer_length);
+					 buf, buf_len);
 	}
 	if (ret < 0) {
 		USBTRACE("request %d failed: %d", control_desc->desc_type, ret);
 		control_desc->transfer_buffer_length = 0;
+		if (buf != control_desc->transfer_buffer)
+			kfree(buf);
 		return wrap_urb_status(ret);
 	} else {
 		USBTRACE("ret: %08x", ret);
 		control_desc->transfer_buffer_length = ret;
 		irp->io_status.info = ret;
+		/* Copy result back if we used a bounce buffer */
+		if (buf != control_desc->transfer_buffer) {
+			memcpy(control_desc->transfer_buffer, buf, ret);
+			kfree(buf);
+		}
 		return USBD_STATUS_SUCCESS;
 	}
 }
